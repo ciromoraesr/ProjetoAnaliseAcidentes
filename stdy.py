@@ -1,30 +1,48 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
-datadf = pd.read_csv('acidentesdf.csv')
-datasp = pd.read_csv('acidentessp.csv')
+datag = pd.read_csv('acidentes.csv', delimiter = ';')
+estados = ['DF', 'SP', 'PE']
+filtered = datag[datag['uf_acidente'].isin(estados)]
+n = filtered.columns
 
-x = list(datadf.columns.values)
-y = list(datasp.columns.values)
+columns_to_drop = ['ind_guardrail', 'ind_acostamento', 'lim_velocidade', 'tp_pavimento','tp_acidente', 'tp_cruzamento', 'chv_localidade']
 
-for i in range(len(x)):
-    if x[i] not in y:
-        columname = x[i]
-        del datadf[columname]
-        
-datadf.iloc[1]
-        
-popsp = 44411238
-popdf = 2800000
+filtered = filtered.drop(columns=columns_to_drop)
+
+
+def mautopct(values):
+    def sub(pct):
+        total = sum(values)
+        val = int(round(pct * total / 100))
+        return '{p:.2f}%'.format(p=pct, v=val)
+    return sub
+
 #%%
-datasp = datasp[datasp['Mes'] != 'Total']
-datadf = datadf[datadf['Mes'] != 'Total']
-plt.figure(figsize = (13,5))
-z = list(datasp['2015'])
-x = list(datadf['Mes'])
-y = list(datadf['2015'])
-plt.plot(x, y, z)
+filtered['data_acidente'] = pd.to_datetime(filtered['data_acidente'])
+liminf = filtered['data_acidente'].min()
+limsup = filtered['data_acidente'].max()
+#%%
+totalaci = filtered['qtde_acidente'].sum()
+totalobi = filtered['qtde_acid_com_obitos'].sum()
+datadf = filtered[filtered['uf_acidente'] == 'DF']
+datasp = filtered[filtered['uf_acidente'] == 'SP']
+datape = filtered[filtered['uf_acidente'] == 'PE']
+totaldf = datadf['qtde_acidente'].sum()
+totalsp = datasp['qtde_acidente'].sum()
+totalpe = datape['qtde_acidente'].sum()
+
+plt.figure(figsize = (20,6))
+explode = (0.09,0,0.25)
+y = np.array([totaldf,totalsp,totalpe])
+colors = ('r', 'b', 'g')
+plt.pie(y, labels=estados, explode=explode, autopct=mautopct(list(y)),colors = colors, shadow = True, startangle = 180,)
+plt.gca().set_title("Acidentes de trânsito de 01/2018 até 08/2022", fontsize = 17)
 plt.show()
-
-
+#%%
+filtered['data_acidente'] = pd.to_datetime(filtered['data_acidente'])
+filtered['ano'] = filtered['data_acidente'].dt.year
+filtered['mes'] = filtered['data_acidente'].dt.month
+group = filtered.groupby(['ano', 'mes', 'uf_acidente'])['qtde_acidente'].count()
