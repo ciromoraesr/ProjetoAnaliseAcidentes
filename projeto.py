@@ -17,10 +17,9 @@ estados = ['DF', 'SP', 'BA']
 filtered = datag[datag['uf_acidente'].isin(estados)]
 n = filtered.columns
 
-columns_to_drop = ['ind_guardrail', 'ind_acostamento', 'lim_velocidade', 'tp_pavimento','tp_acidente', 'tp_cruzamento', 'chv_localidade']
+columns_to_drop = ['ind_guardrail', 'ind_acostamento', 'lim_velocidade','bairro_acidente','end_acidente','cep_acidente', 'tp_pavimento','tp_acidente', 'tp_cruzamento', 'chv_localidade']
 
 filtered = filtered.drop(columns=columns_to_drop)
-
 
 def mautopct(values):
     def sub(pct):
@@ -61,3 +60,5 @@ group = filtered.groupby(['ano', 'mes', 'uf_acidente'])['qtde_acidente'].count()
 
 #%%
 
+filtered.isnull().sum()
+filtered.groupby('data_acidente')['qtde_acidente'].sum()
